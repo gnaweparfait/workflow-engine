@@ -1,299 +1,188 @@
-# WorkflowEngine – Trello/Kanban programmable orienté événements
+# WorkflowEngine — Document de présentation
 
-##  Présentation
+## Projet académique — Développement Web 2.0
 
-**WorkflowEngine** est une application web de gestion de tâches inspirée des outils Kanban comme **Trello**.
-
-Le projet a été réalisé dans le cadre du module **Développement Web 2.0** en **Master 1 à l’ESTM**.
-
-L’objectif principal est de concevoir une application interactive et modulaire reposant sur une **architecture orientée événements (EDA – Event Driven Architecture)**, tout en exploitant les APIs natives du navigateur et une manipulation avancée du DOM, **sans framework** (JavaScript vanilla).
-
----
-
-##  Informations académiques
-
-| | |
-|---|---|
-| **Établissement** | Ecole supérieure de Technologie et de Management |
-| **Niveau** | Master 1  |
-| **Module** | Développement Web 2.0 |
-| **Projet** | WorkflowEngine – Trello/Kanban programmable orienté événements |
-| **Année** | 2025 – 2026 |
+**Établissement :** École Supérieure de Technologie et de Management (ESTM)
+**Niveau :** Master 1
+**Année académique :** 2025 – 2026
+**Professeur :** Monsieur Ibrahima Gaye
 
 ---
 
-## 👥 Participants
+# 1. Introduction
 
-| Nom complet | Filière / spécialisation |
-|-------------|--------------------------|
-| Woré Taokreo Gnawé Parfait | Génie Logiciel |
-| Diakarya Seck | Sécurité des Systèmes d'Information |
-| Abdoulaye Haidara | Sécurité des Systèmes d'Information |
-| Ousman Tahir Harane | Sécurité des Systèmes d'Information |
-| Bichara Bakhit Aware | Sécurité des Systèmes d'Information |
+Dans le cadre du module Développement Web 2.0, notre groupe a réalisé une plateforme web appelée **WorkflowEngine**. L’idée est inspirée des outils comme Trello, avec un système de tableau Kanban pour organiser des tâches.
 
----
+Le but du projet était surtout de pratiquer ce qu’on a vu en cours : JavaScript événementiel, manipulation du DOM, architecture modulaire et utilisation des API du navigateur.
 
-##  Fonctionnalités principales
+On a fait le choix de développer l’application en **JavaScript vanilla (sans framework)** pour bien comprendre comment fonctionne une application web de base.
 
-###  Niveau standard
-
-- Création dynamique de **colonnes** Kanban (nom, couleur d’accent)
-- Ajout, modification et suppression de **tâches** (modal)
-- Ajout rapide de tâche en bas de chaque colonne
-- Déplacement des tâches par **Drag & Drop** (API HTML5)
-- Mise à jour visuelle en temps réel (sans rechargement de page)
-- Recherche et filtrage (titre, description, nom de section)
-- Sauvegarde automatique via **localStorage**
-- Interface générée à partir de l’**état global** de l’application
-- Couleur de carte, priorité, échéance
-- Export / import du tableau en **JSON**
-
-###  Niveau avancé
-
-- Architecture orientée événements (**EDA**)
-- **CustomEvent** et bus **Pub/Sub** (`eventBus.js`)
-- **Délégation d’événements** sur le conteneur `#board`
-- Historique des actions : **Undo** / **Redo** (pattern Commande)
-- Modularité : un fichier par responsabilité (`board`, `tasks`, `columns`, …)
-- Thème **clair / sombre** mémorisé
+Le projet montre aussi une architecture orientée événements (EDA), où tout est basé sur des événements entre les différentes parties de l’application.
 
 ---
 
-##  Technologies utilisées
+# 2. Présentation générale de la plateforme
 
-| Catégorie | Détail |
-|-----------|--------|
-| **Frontend** | HTML5, CSS3, JavaScript (ES6 modules) |
-| **APIs navigateur** | Drag & Drop, `localStorage`, `CustomEvent`, `FileReader` (import) |
-| **Patterns** | Pub/Sub, Commande (undo/redo), rendu depuis le state |
+WorkflowEngine est une application web qui permet de gérer des tâches sous forme de colonnes (style Kanban).
 
-- HTML5 (sémantique + balises `<template>`)
-- CSS3 (variables CSS, responsive, thèmes)
-- JavaScript vanilla (modules ES6)
-- API Drag & Drop
-- API `localStorage`
-- API `CustomEvent`
+Chaque utilisateur peut créer des tâches, les modifier, les déplacer ou les supprimer directement dans l’interface.
 
----
+La plateforme propose plusieurs fonctionnalités :
 
-##  Concepts techniques implémentés
+* création et gestion de colonnes
+* ajout et modification de tâches
+* glisser-déposer des cartes entre colonnes
+* recherche des tâches en temps réel
+* sauvegarde automatique
+* export et import en JSON
+* historique des actions (Undo/Redo)
+* thème clair et sombre
 
-### Gestion avancée du DOM
-
-- Génération dynamique des colonnes et cartes
-- Utilisation de `<template>` + `cloneNode(true)` (`js/utils/templates.js`)
-- Mise à jour du DOM déclenchée par l’événement `stateChanged`
-- Pas de rechargement de page
-
-### Programmation événementielle
-
-#### Délégation d’événements
-
-Les interactions (clic, édition, suppression, drag & drop) sont centralisées sur le parent `#board` via `event.target.closest()`, ce qui évite d’attacher un listener sur chaque carte.
-
-#### Custom Events
-
-Des événements personnalisés découplent les modules :
-
-```javascript
-document.dispatchEvent(
-  new CustomEvent('taskMoved', {
-    detail: { taskId, fromColumn, toColumn },
-  })
-);
-```
-
-#### Pattern Observateur (Pub/Sub)
-
-Le bus d’événements (`js/core/eventBus.js`) relie :
-
-- le **board** (affichage, DnD),
-- les **tâches** et **colonnes** (modals),
-- la **recherche**,
-- les **notifications** (toasts),
-- le **state manager** et la **persistance**.
-
-### Exemple de flux : déplacement d’une tâche
-
-```text
-Drop sur une colonne
-    → history.execute(MoveTaskCommand)
-    → state.moveTask()
-    → publish("taskMoved") puis "stateChanged"
-    → boardModule re-render
-    → localStorage mis à jour
-```
+L’interface est simple et pensée pour être facile à utiliser, même sans formation.
 
 ---
 
-##  Structure du projet
+# 3. Objectifs du projet
 
-```text
-workflow-engine/
-│
-├── index.html              # Interface + balises <template>
-├── css/
-│   └── main.css            # Styles, thème clair/sombre
-│
-├── js/
-│   ├── core/
-│   │   ├── app.js          # Point d'entrée, initialisation
-│   │   ├── constants.js    # Événements, sélecteurs, état par défaut
-│   │   ├── eventBus.js     # Pub/Sub + CustomEvent
-│   │   ├── stateManager.js # État global (tasks, columns, search)
-│   │   ├── commands.js     # Pattern Commande (execute / undo)
-│   │   └── commandHistory.js
-│   │
-│   ├── modules/
-│   │   ├── board/          # Rendu Kanban, délégation, DnD
-│   │   ├── tasks/          # Modal tâches
-│   │   ├── columns/        # Modal colonnes
-│   │   ├── search/         # Filtrage temps réel
-│   │   ├── notifications/  # Toasts
-│   │   ├── persistence/    # Bouton Enregistrer
-│   │   ├── history/        # Undo / Redo (Ctrl+Z, Ctrl+Y)
-│   │   ├── theme/          # Thème clair / sombre
-│   │   └── exportImport/   # Export / import JSON
-│   │
-│   ├── services/
-│   │   └── storageService.js
-│   │
-│   └── utils/
-│       ├── templates.js    # cloneNode sur <template>
-│       ├── dom.js, format.js, columns.js, copy.js, …
-│
-├── scripts/
-│   └── smoke-test.mjs      # Tests logiques (Node)
-│
-├── Captures/               # Captures d’écran pour le README
-└── README.md
-```
+Le projet avait deux types d’objectifs.
 
-> Les modèles HTML (`tpl-column`, `tpl-task-card`, …) sont dans `index.html`, pas dans des fichiers séparés.
+## Objectifs pédagogiques
+
+* comprendre les événements JavaScript
+* manipuler le DOM dynamiquement
+* structurer une application en modules
+* utiliser les API du navigateur
+* organiser un code front-end propre
+
+## Objectifs techniques
+
+* créer un tableau Kanban fonctionnel
+* gérer un état global de l’application
+* utiliser un bus d’événements (Pub/Sub)
+* implémenter le drag & drop
+* sauvegarder les données dans le navigateur
 
 ---
 
-##  Installation et exécution
+# 4. Architecture technique
 
-### 1. Ouvrir le projet
+L’application est basée sur une architecture orientée événements.
 
-Placer le dossier `workflow-engine` sur votre machine, puis ouvrir un terminal **à la racine** de ce dossier.
+Les différents modules communiquent entre eux via un système d’événements (`CustomEvent`).
 
-### 2. Lancer un serveur local (obligatoire)
+Les avantages de cette architecture :
 
-Les **modules ES6** (`import` / `export`) ne fonctionnent pas en ouvrant `index.html` directement (`file://`). Utiliser un serveur HTTP :
+* les modules sont indépendants
+* le code est plus facile à maintenir
+* la logique est bien séparée
+* l’application est plus simple à faire évoluer
 
-**Python (recommandé)**
+Le projet est organisé comme suit :
 
-```bash
-python -m http.server 8080
-```
+* **core/** : état, événements, commandes, historique
+* **modules/** : board, tâches, colonnes, recherche, thèmes
+* **services/** : stockage des données
+* **utils/** : fonctions utiles
+* **css/** : styles de l’interface
 
-Puis ouvrir dans le navigateur :
-
-```text
-http://localhost:8080
-```
-
-**Alternatives :** extension **Live Server** (VS Code), ou `npx serve .`
-
-### 3. Test rapide (optionnel)
-
-```bash
-node scripts/smoke-test.mjs
-```
+À chaque changement, un événement `stateChanged` est déclenché pour mettre à jour l’interface et sauvegarder les données.
 
 ---
 
-##  Persistance des données
+# 5. Fonctionnalités principales
 
-Les données sont enregistrées localement :
+## Gestion des tâches
 
-```javascript
-localStorage.setItem('workflow-engine:state', JSON.stringify(state));
-```
+Chaque tâche contient :
 
-- Sauvegarde **automatique** à chaque modification
-- Bouton **Enregistrer** pour une sauvegarde manuelle explicite
-- Les tâches et colonnes restent disponibles après **F5** (actualisation)
+* un titre
+* une description
+* une priorité
+* une date limite
+* une couleur
 
----
+Les tâches sont affichées sous forme de cartes dans les colonnes.
 
-## Guide d’utilisation rapide
+## Gestion des colonnes
 
-| Action | Comment faire |
-|--------|----------------|
-| Nouvelle tâche | **Nouvelle tâche** ou champ rapide en bas de colonne |
-| Nouvelle colonne | Bouton **Colonne** |
-| Modifier / supprimer | Icônes sur la carte ou l’en-tête de colonne |
-| Déplacer | Glisser-déposer entre colonnes |
-| Rechercher | Barre de recherche du header |
-| Annuler / Rétablir | ↶ ↷ ou **Ctrl+Z** / **Ctrl+Y** |
-| Export / Import | Boutons **Export** / **Import** (JSON) |
-| Thème | Bouton soleil / lune |
+On peut ajouter, modifier ou supprimer des colonnes.
 
----
+Colonnes par défaut :
 
-## Objectifs pédagogiques atteints
+* À faire
+* En cours
+* Terminé
 
-Ce projet nous a permis de :
+## Drag & Drop
 
-- comprendre la **programmation événementielle** (listeners, CustomEvent, bus),
-- manipuler efficacement le **DOM** (sélecteurs, templates, délégation),
-- implémenter une **architecture modulaire** sans framework,
-- utiliser les **APIs natives** du navigateur (DnD, localStorage, fichiers),
-- développer une application **dynamique** avec état centralisé,
-- optimiser les performances via la **délégation d’événements**,
-- appliquer le **pattern Commande** pour l’historique Undo/Redo.
+Les tâches peuvent être déplacées entre les colonnes grâce au glisser-déposer (HTML5 Drag & Drop).
 
----
+## Sauvegarde
 
-##  Captures d’écran
+Les données sont automatiquement sauvegardées dans le navigateur avec `localStorage`.
 
-Les images sont dans le dossier [`Captures/`](Captures/).
+## Export / Import
 
-### 1. Interface principale du tableau Kanban (mode sombre)
+On peut exporter le tableau en JSON et le réimporter plus tard.
 
-*Fichier : `interface-kanban-mode-sombre.png`*
+## Historique
 
-![Interface principale du tableau Kanban — mode sombre](Captures/interface-kanban-mode-sombre.png)
-
-Vue d’ensemble avec les trois colonnes **À faire**, **En cours** et **Terminé**, la barre de recherche et les actions du header.
+Un système permet d’annuler ou de refaire des actions (Ctrl+Z / Ctrl+Y).
 
 ---
 
-### 2. Interface principale du tableau Kanban (mode clair)
+# 6. Technologies utilisées
 
-*Fichier : `interface-kanban-mode-clair.png`*
+* HTML5 pour la structure
+* CSS3 pour le style
+* JavaScript ES6+ pour la logique
+* localStorage pour la sauvegarde
+* CustomEvent pour la communication interne
+* FileReader et Blob pour import/export
+* Node.js pour quelques tests
 
-![Interface principale du tableau Kanban — mode clair](Captures/interface-kanban-mode-clair.png)
-
-Même interface en **thème clair** (bascule soleil / lune dans le header).
-
----
-
-### 3. Formulaire de création d’une tâche
-
-*Fichier : `interface-creation-tache.png`*
-
-![Formulaire de création d’une nouvelle tâche](Captures/interface-creation-tache.png)
-
-Modal **Nouvelle tâche** : titre, description, choix de la section (colonnes), priorité, échéance et couleur.
+Le projet est fait sans framework pour mieux comprendre le JavaScript de base.
 
 ---
 
-### 4. Formulaire de création d’une colonne
+# 7. Difficultés rencontrées
 
-*Fichier : `interface-creation-colonne.png`*
+Pendant le projet, on a rencontré quelques difficultés :
 
-![Formulaire de création d’une nouvelle colonne](Captures/interface-creation-colonne.png)
+* mise à jour dynamique du DOM
+* synchronisation de l’état global
+* gestion du drag & drop
+* organisation du code en modules
+* mise en place de l’historique Undo/Redo
 
-Modal **Nouvelle colonne** : nom et couleur d’accent pour personnaliser le tableau.
+Ces difficultés nous ont permis de mieux comprendre le développement front-end.
 
 ---
 
+# 8. Conclusion
 
-## Remerciements
+WorkflowEngine est une petite application web de gestion de tâches inspirée de Trello.
 
-Nous tenons à adresser nos sincères remerciements à notre professeur  **Ibrahima Gaye**, pour son encadrement, ses conseils avisés, sa disponibilité et son précieux soutien.
+Ce projet nous a permis de pratiquer plusieurs notions importantes du développement web : événements, DOM, modularité et gestion d’état.
+
+C’est aussi une base qui peut être améliorée plus tard avec une base de données, une connexion utilisateur ou même une version collaborative en temps réel.
+
+---
+
+# 9. Participants
+
+* Woré Taokreo Gnawé Parfait — Génie Logiciel
+* Diakarya Seck — Sécurité des Systèmes d'Information
+* Abdoulaye Haidara — Sécurité des Systèmes d'Information
+* Ousman Tahir Harane — Sécurité des Systèmes d'Information
+* Bichara Bakhit Aware — Sécurité des Systèmes d'Information
+
+---
+
+# Liens du projet
+
+GitHub :
+[https://github.com/gnaweparfait/workflow-engine](https://github.com/gnaweparfait/workflow-engine)
+
+Site en ligne :
+[https://gnaweparfait.github.io/workflow-engine/](https://gnaweparfait.github.io/workflow-engine/)
